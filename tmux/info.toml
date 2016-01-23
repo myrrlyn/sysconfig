@@ -1,0 +1,11 @@
+links = [
+	["main.conf", ".tmux.conf"],
+]
+
+systemd = [
+	"tmux@.service",
+]
+
+shell = [
+	"tmux.sh",
+]

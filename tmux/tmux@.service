@@ -1,0 +1,14 @@
+[Unit]
+Description=Dedicated tmux server for each user
+
+[Service]
+Type=forking
+User=%I
+ExecStart=/usr/bin/tmux -2u new-session -s %I -d
+# Disable this to keep sessions alive between user connections
+# With it enabled, tmux will die on logout. Somewhat defeats the point of having
+# it in the first place
+#ExecStop=/usr/bin/tmux kill-session -t %I
+
+[Install]
+WantedBy=multi-user.target
