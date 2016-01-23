@@ -1,0 +1,171 @@
+#!/usr/bin/env ruby
+
+require 'fileutils'
+require 'getoptlong'
+
+unless (require 'tomlrb')
+	%x[gem --user-install install tomlrb]
+end
+
+class Configuration
+
+	def self.new_component new_comp
+		FileUtils.mkdir_p "#{DIR}/#{new_comp}"
+		FileUtils.touch "#{DIR}/#{new_comp}/info.toml"
+	end
+
+	DIR = File.expand_path "..", "#{File.dirname __FILE__}"
+	ALL = Dir.open(DIR).sort.reject { |p| p.match(/(bin|doc|\..*)/) }
+
+	def initialize component = nil, opts = {}
+		@component = component
+		@opts = opts
+		@info = Tomlrb.load_file "#{@component}/info.toml", symbolize_keys: true
+	end
+
+	def to_s
+		puts "Configuration for #{@component} with options #{@opts.inspect}"
+	end
+
+	def install
+		add_links if @opts[:links]
+		add_systemd if @opts[:systemd]
+		add_shell if @opts[:shell]
+		self
+	end
+
+	def uninstall
+		remove_links if @opts[:links]
+		remove_systemd if @opts[:systemd]
+		remove_shell if @opts[:shell]
+		self
+	end
+
+	def debug
+		puts "Component: #{@component}"
+		puts "Options:   #{@opts.inspect}"
+		puts "Links:     #{@info[:links].inspect}"
+		puts "SystemD:   #{@info[:systemd].inspect}"
+		puts "Shell:     #{@info[:shell].inspect}"
+		self
+	end
+
+	private
+
+	def resolve_backup
+		"#{DIR}/.backup/#{@component}"
+	end
+
+	def resolve_config config
+		"#{DIR}/#{@component}/#{config}"
+	end
+
+	def resolve_original original
+		File.expand_path original, "~"
+	end
+
+	def backup_links
+		bkup = resolve_backup
+		FileUtils.mkdir_p bkup
+		@info[:links].each do |pair|
+			orig = resolve_original pair[1]
+			if (File.exist? orig and not File.symlink? orig and not @opts[:dry])
+				FileUtils.move(orig, "#{bkup}/pair[1]", verbose: @opts[:verbose])
+			end
+		end
+	end
+
+	def restore_links
+		bkup = resolve_backup
+		@info[:links].each do |pair|
+			orig = resolve_original pair[1]
+			unless (File.exist? orig or @opts[:dry])
+				FileUtils.move("#{bkup}/#{pair[1]}", orig, verbose: @opts[:verbose])
+			end
+		end
+	end
+
+	def add_links
+		backup_links
+		@info[:links].each do |pair|
+			cfg = resolve_config pair[0]
+			org = resolve_original pair[1]
+			opt = {}
+			opt[:force] = File.symlink? org
+			opt[:verbose] = @opts[:verbose] || true
+			FileUtils.symlink(cfg, org, opt) unless @opts[:dry]
+		end
+		self
+	end
+
+	def remove_links
+		@info[:links].each do |pair|
+			orig = resolve_config pair[1]
+			if (File.symlink? orig)
+				FileUtils.remove(orig, verbose: @opts[:verbose]) unless @opts[:dry]
+			elsif (File.exist? orig)
+				puts "Original file is NOT a symlink - check manually"
+			end
+		end
+		restore_links
+		self
+	end
+
+end
+
+opts = GetoptLong.new(
+	[ '--links', '-l', GetoptLong::NO_ARGUMENT ],
+	[ '--systemd', '-u', GetoptLong::NO_ARGUMENT ],
+	[ '--shell', '-s', GetoptLong::NO_ARGUMENT ],
+	[ '--system', GetoptLong::NO_ARGUMENT ],
+	[ '--help', '-h', GetoptLong::NO_ARGUMENT ],
+	[ '--verbose', '-v', GetoptLong::NO_ARGUMENT ],
+	[ '--dry-run', '-d', GetoptLong::NO_ARGUMENT ]
+)
+
+cfg_opts = {
+	links: false,
+	systemd: false,
+	shell: false,
+	system: false,
+	verbose: false,
+	dry: false
+}
+
+opts.each do |opt, arg|
+	puts "#{opt.inspect}"
+	case opt
+	when '--links'
+		cfg_opts[:links] = true
+	when '--systemd'
+		cfg_opts[:systemd] = true
+	when '--shell'
+		cfg_opts[:shell] = true
+	when '--system'
+		cfg_opts[:system] = true
+	when '--verbose'
+		cfg_opts[:verbose] = true
+	when '--dry-run'
+		cfg_opts[:dry] = true
+	when '--help'
+		puts <<-EOS
+What do I look like, a butler?
+		EOS
+		exit 0
+	end
+end
+
+if ARGV.length == 0
+	puts "Missing configuration arguments"
+	exit 1
+end
+
+ARGV.each do |cfg|
+	puts cfg.inspect
+	unless Configuration::ALL.include? cfg
+		puts "Invalid configuration entry: #{cfg}"
+		puts "Valid choices are: #{Configuration::ALL}"
+		exit 1
+	end
+#	c = Configuration.new(cfg, cfg_opts)
+end

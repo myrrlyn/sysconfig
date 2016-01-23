@@ -1,0 +1,11 @@
+#!/usr/bin/env ruby
+
+load "#{File.expand_path("..", __FILE__)}/sysconfig"
+
+if (require 'pry')
+	#Pry.start
+elsif (require 'irb')
+	#IRB.start
+else
+	puts "Could not start pry or irb"
+end
