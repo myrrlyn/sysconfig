@@ -68,7 +68,11 @@ class Configuration
 		bkup = resolve_backup
 		FileUtils.mkdir_p bkup
 		@info[:links].each do |pair|
+			cfig = resolve_config pair[0]
 			orig = resolve_original pair[1]
+			if cfig.include? "system"
+				next unless @opts[:system]
+			end
 			if (File.exist? orig and not File.symlink? orig and not @opts[:dry])
 				FileUtils.move(orig, "#{bkup}/pair[1]", verbose: @opts[:verbose])
 			end
@@ -78,7 +82,11 @@ class Configuration
 	def restore_links
 		bkup = resolve_backup
 		@info[:links].each do |pair|
+			cfig = resolve_config pair[0]
 			orig = resolve_original pair[1]
+			if cfig.include? "system"
+				next unless @opts[:system]
+			end
 			unless (File.exist? orig or @opts[:dry])
 				FileUtils.move("#{bkup}/#{pair[1]}", orig, verbose: @opts[:verbose])
 			end
@@ -88,19 +96,27 @@ class Configuration
 	def add_links
 		backup_links
 		@info[:links].each do |pair|
-			cfg = resolve_config pair[0]
-			org = resolve_original pair[1]
+			cfig = resolve_config pair[0]
+			orig = resolve_original pair[1]
+			if cfig.include? "system"
+				next unless @opts[:system]
+			end
 			opt = {}
-			opt[:force] = File.symlink? org
+			opt[:force] = File.symlink? orig
 			opt[:verbose] = @opts[:verbose] || true
-			FileUtils.symlink(cfg, org, opt) unless @opts[:dry]
+			puts "#{cfig} <- #{orig}" if @opts[:dry]
+			FileUtils.symlink(cfig, orig, opt) unless @opts[:dry]
 		end
 		self
 	end
 
 	def remove_links
 		@info[:links].each do |pair|
-			orig = resolve_config pair[1]
+			cfig = resolve_config pair[0]
+			orig = resolve_original pair[1]
+			if cfig.include? "system"
+				next unless @opts[:system]
+			end
 			if (File.symlink? orig)
 				FileUtils.remove(orig, verbose: @opts[:verbose]) unless @opts[:dry]
 			elsif (File.exist? orig)
@@ -133,7 +149,6 @@ cfg_opts = {
 }
 
 opts.each do |opt, arg|
-	puts "#{opt.inspect}"
 	case opt
 	when '--links'
 		cfg_opts[:links] = true
@@ -160,12 +175,22 @@ if ARGV.length == 0
 	exit 1
 end
 
+case ARGV[0]
+when "install" then
+	action = :install
+	ARGV.shift
+when "uninstall" then
+	action = :uninstall
+	ARGV.shift 0
+end
+
 ARGV.each do |cfg|
-	puts cfg.inspect
 	unless Configuration::ALL.include? cfg
 		puts "Invalid configuration entry: #{cfg}"
 		puts "Valid choices are: #{Configuration::ALL}"
 		exit 1
 	end
-#	c = Configuration.new(cfg, cfg_opts)
+	c = Configuration.new(cfg, cfg_opts)
+	puts c.debug if cfg_opts[:dry] or cfg_opts[:verbose]
+	c.send(action)
 end

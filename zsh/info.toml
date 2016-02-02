@@ -1,0 +1,14 @@
+links = [
+	["user/zshenv.sh",   ".zshenv"],
+	["user/zprofile.sh", ".zprofile"],
+	["user/zshrc.sh",    ".zshrc"],
+	["user/zlogin.sh",   ".zlogin"],
+	["user/zlogout.sh",  ".zlogout"],
+	# Note: ArchLinux compiles zsh to look in /etc/zsh, rather than /etc
+	# TODO: Make this work automatically rather than requiring manual alteration
+	["system/zshenv.sh",   "/etc/zsh/zshenv"],
+	["system/zprofile.sh", "/etc/zsh/zprofile"],
+	["system/zshrc.sh",    "/etc/zsh/zshrc"],
+	["system/zlogin.sh",   "/etc/zsh/zlogin"],
+	["system/zlogout.sh",  "/etc/zsh/zlogout"],
+]
