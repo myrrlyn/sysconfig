@@ -181,7 +181,7 @@ when "install" then
 	ARGV.shift
 when "uninstall" then
 	action = :uninstall
-	ARGV.shift 0
+	ARGV.shift
 end
 
 ARGV.each do |cfg|

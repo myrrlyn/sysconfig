@@ -1,6 +1,6 @@
 autoload -U colors && colors
 autoload -Uz compinit && compinit
-autoload -Uz vcs_info
+autoload -Uz vcs_info && vcs_info
 
 # Add hooks
 autoload -U add-zsh-hook
@@ -9,17 +9,14 @@ add-zsh-hook precmd precmd_update_prompt
 add-zsh-hook preexec preexec_update_prompt
 
 function chpwd_update_prompt () {
-	vcs_info
 	ps1_update
 }
 
 function precmd_update_prompt () {
-	vcs_info
 	ps1_update
 }
 
 function preexec_update_prompt () {
-	vcs_info
 	ps1_update
 }
 
@@ -32,10 +29,16 @@ function ps1_update () {
 	szp_user="%F{yellow}%n%f@%F{yellow)}%m%f "
 
 	# SSH connection?
-	szp_ssh="%F{cyan}$([[ ! -z $SSH_CONNECTION ]] && echo "(SSH)")%f "
+	szp_ssh="%F{cyan}$([[ ! -z $SSH_CONNECTION ]] && echo "(SSH) ")%f"
 
 	# Current working directory, with ~ swapped in for $HOME if applicable
 	szp_dir="%F{blue}%~%f "
+
+	# TODO: put git and RVM shell customizations in their respective configs,
+	# and expose them to this function for use.
+	# source git/prompt.zsh && setup_vcs_git
+
+	szp_git="${vcs_info_msg_0_}"
 
 	# RVM information
 	if [[ ! -z ${rvm_path} ]] ; then
@@ -48,7 +51,7 @@ function ps1_update () {
 	szp_sigil="
 %F{%(!.red.yellow)}%(!.Ω.λ)%f "
 
-export PROMPT="$szp_user$szp_ssh$szp_dir$szp_rvm$szp_sigil"
+export PROMPT="$szp_user$szp_ssh$szp_dir$szp_git$szp_rvm$szp_sigil"
 }
 
-RPROMPT="%F{%(?.green.red)}%?%f"
+export RPROMPT="%F{%(?.green.red)}%?%f"

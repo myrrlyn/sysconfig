@@ -50,13 +50,14 @@ good.
 ```
 
 Each component has its own directory containing a required `info.toml` file and
-
+assorted other items. I only know how to work with systemd; launchd is beyond me
+and I don't really use OSX enough to care.
 
 ## Goals
 
-- Idempotent. Seriously.
+- Idempotent. Seriously. ✓
 - Modular as hell
-- SAFE. No clobbering existing files.
-- Tweakable. Different machines need different values. Don't be the Borg.
+- SAFE. No clobbering existing files. ✓
+- Tweakable. Different machines need different values. Don't be the Borg. ✗
 - Runnable out of the box. Might not be guaranteed right now, because I'm using
     Ruby (and a Gem too, even), but who doesn't have Ruby these days?
