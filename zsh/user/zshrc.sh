@@ -32,7 +32,7 @@ function ps1_update () {
 	szp_user="%F{yellow}%n%f@%F{yellow)}%m%f "
 
 	# SSH connection?
-	szp_ssh="%F{cyan}$([[ ! -z $SSH_CONNECTION ]] && echo "(SSH)")%f "
+	szp_ssh="$([[ ! -z $SSH_CONNECTION ]] && echo "%F{cyan}(SSH)%f ")"
 
 	# Current working directory, with ~ swapped in for $HOME if applicable
 	szp_dir="%F{blue}%~%f "
