@@ -84,7 +84,7 @@ function ps1_update () {
 	# and expose them to this function for use.
 
 	# If we're not in a git project
-	if [[ $($(git status >/dev/null 2>&1); echo $?) == 0 ]]; then
+	if [[ $(git rev-parse --is-inside-work-tree 2> /dev/null) == 'true' ]]; then
 		prompt_parts+="%F{${SZP_COL_VCS:-magenta}}${vcs_info_msg_0_}%f"
 	fi
 
