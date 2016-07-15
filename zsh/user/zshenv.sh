@@ -1,5 +1,6 @@
 # I haaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaate the typical editors
-[[ -f "/usr/bin/nano" ]] && export EDITOR="/usr/bin/nano"
-[[ -f "/usr/bin/atom" ]] && export VISUAL="/usr/bin/atom"
+[[ -f "$(which nano)" ]] && export EDITOR="$(which nano)"
+[[ -f "$(which atom)" ]] && export VISUAL="$(which atom) --wait"
 
-path+="${HOME}/bin"
+typeset -U path
+[[ -d "${HOME}/bin" ]] && path+="${HOME}/bin"
